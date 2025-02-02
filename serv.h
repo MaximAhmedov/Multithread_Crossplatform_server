@@ -42,11 +42,11 @@ public:
 myServer();
 ~myServer();
 void startServer();
-void recFrom(WIN(SOCKET clSocket)NIX(int clSocket));
+void recFrom(int& recvSize, WIN(SOCKET clSocket)NIX(int clSocket));
 void sendTo(WIN(SOCKET clSocket)NIX(int clSocket));
 void stopServer();
 
-void threadFunc(SOCKET& clSocket, std::mutex& mutex);
+void threadFunc(WIN(SOCKET& clSocket)NIX(int& clSocket), std::mutex& mutex);
 
 private:
 
@@ -65,7 +65,8 @@ int iResult;
 // char recvBuff[Buff];
 // std::string message;
 
-std::vector<std::thread> _vec;
+//std::vector<std::thread> _vec;
+
 int threadCounter = 0;
 int iterationCounter = 0;
 std::mutex _mutex;

@@ -52,36 +52,38 @@ void myServer::startServer(){
 
         ClientSocket = accept(ListenSocket, (struct sockaddr*)&client_addr, &client_len);
         if(ClientSocket == INVALID_SOCKET){
-            std::cout << "accept failed: " << GetLastError() <<std::endl;
+            std::cout << "accept failed: " <<std::endl;
             WIN(closesocket(ClientSocket))NIX(close(ClientSocket));
             WIN(WSACleanup());
         }
         else{
             std::cout << "accept is ok\naccepted new client: " << ClientSocket << std::endl;
-            //std::thread t(threadFunc, this, std::ref(ClientSocket), std::ref(_mutex));
-            //t.detach();
-            _vec.emplace_back(std::thread(threadFunc, this, std::ref(ClientSocket), std::ref(_mutex)));
+            std::thread t(&myServer::threadFunc, this, std::ref(ClientSocket), std::ref(_mutex));
+            t.detach();
+            //_vec.emplace_back(std::thread(&myServer::threadFunc, this, std::ref(ClientSocket), std::ref(_mutex)));
         }
 
         std::cout << ++iterationCounter << " цикл While\n";
     }
 
-    for (std::thread &t : _vec) {
-        if (t.joinable()) {
-            t.join();
-        }
-    }
+    // for (std::thread &t : _vec) {
+    //     if (t.joinable()) {
+    //         t.join();
+    //     }
+    // }
 };
 
-void myServer::recFrom(WIN(SOCKET clSocket)NIX(int clSocket)){
+void myServer::recFrom(int& recvSize, WIN(SOCKET clSocket)NIX(int clSocket)){
     int recvBuffLen = Buff;
     char recvBuff[Buff];
     std::string message;
     bzero(recvBuff, recvBuffLen);
     message.clear();
-    recv(clSocket,recvBuff,recvBuffLen,0);
-    message = recvBuff;
-    std::cout << "Data received from client: " << clSocket << " " << message << std::endl;
+    recvSize = recv(clSocket,recvBuff,recvBuffLen,0);
+    if(recvSize >= 1){
+        message = recvBuff;
+        std::cout << "Data received from client: " << clSocket << " " << message << std::endl;
+    }
 };
 
 void myServer::sendTo(WIN(SOCKET clSocket)NIX(int clSocket)){
@@ -106,14 +108,18 @@ void myServer::stopServer(){
     WIN(closesocket(ClientSocket))NIX(close(ClientSocket));
     WIN(WSACleanup());
 }
-void myServer::threadFunc(SOCKET& clSocket, std::mutex& mutex){
-    
-    SOCKET x = clSocket;
+void myServer::threadFunc(WIN(SOCKET& clSocket)NIX(int& clSocket), std::mutex& mutex){
+    int n;
+    int x = clSocket;
     while(1){
     //mutex.lock();
-    recFrom(x);
+    recFrom(n, x);
+    if(n <= 0){
+        WIN(closesocket(x);)NIX(close(x);)
+        break;
+    }
     sendTo(x);
     //mutex.unlock();
     };
-    closesocket(x);
+    //WIN(closesocket(x))NIX(close(x));
 };
